@@ -1,106 +1,94 @@
-# Storybook Addon Kit
+# Storybook Addon Events
 
-Simplify the creation of Storybook addons
+This [storybook](https://storybooks.js.org) ([source](https://github.com/storybookjs/storybook)) addon allows you to add events for your stories.
 
-- 📝 Live-editing in development
-- ⚛️ React/JSX support
-- 📦 Transpiling and bundling with Babel
-- 🏷 Plugin metadata
-- 🚢 Release management with [Auto](https://github.com/intuit/auto)
-- 🧺 Boilerplate and sample code
+[Framework Support](https://github.com/storybookjs/storybook/blob/master/ADDONS_SUPPORT.md)
 
-## Getting Started
+[Storybook Addon Events Live Demo](https://z4o4z.github.io/storybook-addon-events/index.html)
 
-Click the **Use this template** button to get started.
-
-![](https://user-images.githubusercontent.com/42671/106809879-35b32000-663a-11eb-9cdc-89f178b5273f.gif)
-
-Clone your repository and install dependencies.
+### Getting Started
 
 ```sh
-npm install
+npm i --save-dev @storybook/addon-events event-emitter
 ```
 
-### Development scripts
+within `.storybook/main.js`:
 
-- `npm run start` runs babel in watch mode and starts Storybook
-- `npm run build` build and package your addon code
-
-## What's included?
-
-![Demo](https://user-images.githubusercontent.com/42671/107857205-e7044380-6dfa-11eb-8718-ad02e3ba1a3f.gif)
-
-The addon code lives in `src`. It demonstrates all core addon related concepts. The three [UI paradigms](https://storybook.js.org/docs/react/addons/addon-types#ui-based-addons)
-
-- `src/Tool.js`
-- `src/Panel.js`
-- `src/Tab.js`
-
-Which, along with the addon itself, are registered in `src/preset/manager.js`.
-
-Managing State and interacting with a story:
-
-- `src/withGlobals.js` & `src/Tool.js` demonstrates how to use `useGlobals` to manage global state and modify the contents of a Story.
-- `src/withRoundTrip.js` & `src/Panel.js` demonstrates two-way communication using channels.
-- `src/Tab.js` demonstrates how to use `useParameter` to access the current story's parameters.
-
-Your addon might use one or more of these patterns. Feel free to delete unused code. Update `src/preset/manager.js` and `src/preset/preview.js` accordingly.
-
-Lastly, configure you addon name in `src/constants.js`.
-
-### Metadata
-
-Storybook addons are listed in the [catalog](https://storybook.js.org/addons) and distributed via npm. The catalog is populated by querying npm's registry for Storybook-specific metadata in `package.json`. This project has been configured with sample data. Learn more about available options in the [Addon metadata docs](https://storybook.js.org/docs/react/addons/addon-catalog#addon-metadata).
-
-## Release Management
-
-### Setup
-
-This project is configured to use [auto](https://github.com/intuit/auto) for release management. It generates a changelog and pushes it to both GitHub and npm. Therefore, you need to configure access to both:
-
-- [`NPM_TOKEN`](https://docs.npmjs.com/creating-and-viewing-access-tokens#creating-access-tokens) Create a token with both _Read and Publish_ permissions.
-- [`GH_TOKEN`](https://github.com/settings/tokens) Create a token with the `repo` scope.
-
-Then open your `package.json` and edit the following fields:
-
-- `name`
-- `author`
-- `repository`
-
-#### Local
-
-To use `auto` locally create a `.env` file at the root of your project and add your tokens to it:
-
-```bash
-GH_TOKEN=<value you just got from GitHub>
-NPM_TOKEN=<value you just got from npm>
+```js
+module.exports = {
+  addons: ['@storybook/addon-events']
+}
 ```
 
-Lastly, **create labels on GitHub**. You’ll use these labels in the future when making changes to the package.
+Then write your stories like this:
 
-```bash
-npx auto create-labels
+```js
+import withEvents from '@storybook/addon-events';
+import EventEmitter from 'event-emitter';
+
+import Logger from './Logger';
+import * as EVENTS from './events';
+
+const emitter = new EventEmitter();
+const emit = emitter.emit.bind(emitter);
+
+export default {
+  title: 'withEvents',
+  decorators: [
+    withEvents({
+      emit,
+      events: [
+        {
+          name: EVENTS.TEST_EVENT_1,
+          title: 'Test event 1',
+          payload: 0,
+        },
+        {
+          name: EVENTS.TEST_EVENT_2,
+          title: 'Test event 2',
+          payload: 'asdasdad asdasdasd',
+        },
+        {
+          name: EVENTS.TEST_EVENT_3,
+          title: 'Test event 3',
+          payload: {
+            string: 'value',
+            number: 123,
+            array: [1, 2, 3],
+            object: {
+              string: 'value',
+              number: 123,
+              array: [1, 2, 3],
+            },
+          },
+        },
+        {
+          name: EVENTS.TEST_EVENT_4,
+          title: 'Test event 4',
+          payload: [
+            {
+              string: 'value',
+              number: 123,
+              array: [1, 2, 3],
+            },
+            {
+              string: 'value',
+              number: 123,
+              array: [1, 2, 3],
+            },
+            {
+              string: 'value',
+              number: 123,
+              array: [1, 2, 3],
+            },
+          ],
+        },
+      ]
+    }),
+  ],
+}
+
+export const defaultView = () => (
+  <Logger emitter={emitter} />
+);
 ```
-
-If you check on GitHub, you’ll now see a set of labels that `auto` would like you to use. Use these to tag future pull requests.
-
-#### GitHub Actions
-
-This template comes with GitHub actions already set up to publish your addon anytime someone pushes to your repository.
-
-Go to `Settings > Secrets`, click `New repository secret`, and add your `NPM_TOKEN`.
-
-### Creating a releasing
-
-To create a release locally you can run the following command, otherwise the GitHub action will make the release for you.
-
-```sh
-npm run release
-```
-
-That will:
-
-- Build and package the addon code
-- Bump the version
-- Push a release to GitHub and npm
-- Push a changelog to GitHub
